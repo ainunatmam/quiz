@@ -19,7 +19,7 @@ export default defineNuxtConfig({
         },
         {
           rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Hanken+Grotesk:wght@600&family=Noto+Serif+JP:wght@400;700&family=Klee+One:wght@400;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap",
+          href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Hanken+Grotesk:wght@600&family=Noto+Serif+JP:wght@400;700&family=Klee+One:wght@400;600&family=Quicksand:wght@500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap",
         }
       ],
     },
