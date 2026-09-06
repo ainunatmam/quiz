@@ -47,15 +47,41 @@
       ></div>
 
       <!-- Level Nodes (1 to 5) -->
-      <!-- Node 5 -->
-      <div class="absolute top-[100px] left-[35%]">
+      <!-- Node 5 (Grand Final Master Stage) -->
+      <div class="absolute top-[80px] left-[35%]">
         <button 
           @click="clickNode(5)"
           :class="getNodeClass(5)"
-          class="w-20 h-20 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
+          class="w-24 h-24 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200 border-4 shadow-xl"
         >
-          <span class="material-symbols-outlined text-2xl font-bold">{{ getNodeIcon(5) }}</span>
-          <span class="text-xs font-bold mt-1 font-display">Stage 5</span>
+          <!-- Special Master Stage Crown Topper -->
+          <div class="absolute -top-6 text-[#ffd93d] animate-bounce">
+            <span class="material-symbols-outlined text-3xl font-bold drop-shadow-md" style="font-variation-settings: 'FILL' 1;">crown</span>
+          </div>
+
+          <span class="material-symbols-outlined text-3xl font-bold" style="font-variation-settings: 'FILL' 1;">{{ getNodeIcon(5) }}</span>
+          <span class="text-xs font-extrabold mt-0.5 font-display">Stage 5</span>
+
+          <!-- Stars earned layout -->
+          <div 
+            v-if="store.state.completedStages[5]?.completed"
+            class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90 z-20"
+          >
+            <span 
+              v-for="star in 3" 
+              :key="star"
+              class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
+              :style="{ fontVariationSettings: star <= (store.state.completedStages[5]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
+            >star</span>
+          </div>
+
+          <!-- Mascot pointing/cheering at Current stage 5 -->
+          <div 
+            v-if="store.state.currentStage === 5" 
+            class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"
+          >
+            <img alt="Mascot at current stage" class="w-full h-full object-contain filter drop-shadow-lg" src="/mascot.png" />
+          </div>
         </button>
       </div>
 
@@ -64,12 +90,25 @@
         <button 
           @click="clickNode(4)"
           :class="getNodeClass(4)"
-          class="w-24 h-24 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
+          class="w-20 h-20 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
         >
-          <span class="material-symbols-outlined text-4xl font-bold" style="font-variation-settings: 'FILL' 1;">{{ getNodeIcon(4) }}</span>
-          <span class="text-sm font-bold mt-1 font-display">Stage 4</span>
+          <span class="material-symbols-outlined text-2xl font-bold" style="font-variation-settings: 'FILL' 1;">{{ getNodeIcon(4) }}</span>
+          <span class="text-xs font-bold mt-1 font-display">Stage 4</span>
 
-          <!-- Mascot pointing/cheering at Current stage -->
+          <!-- Stars earned layout -->
+          <div 
+            v-if="store.state.completedStages[4]?.completed"
+            class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90"
+          >
+            <span 
+              v-for="star in 3" 
+              :key="star"
+              class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
+              :style="{ fontVariationSettings: star <= (store.state.completedStages[4]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
+            >star</span>
+          </div>
+
+          <!-- Mascot pointing/cheering at Current stage 4 -->
           <div 
             v-if="store.state.currentStage === 4" 
             class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"

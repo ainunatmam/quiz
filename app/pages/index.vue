@@ -58,7 +58,7 @@
           <!-- Stars Card -->
           <div class="stat-card p-6 flex flex-col items-center justify-center select-none">
             <span class="material-symbols-outlined text-[#ffd93d] text-4xl mb-2" style="font-variation-settings: 'FILL' 1;">star</span>
-            <h3 class="text-sm font-bold text-[#4d4633] uppercase tracking-wide">Total Stars</h3>
+            <h3 class="text-sm font-bold text-[#4d4633] uppercase tracking-wide">Total Bintang</h3>
             <p class="text-3xl font-extrabold text-[#1f1b12] mt-1 flex items-center gap-1">
               {{ store.state.stars }}
               <span class="material-symbols-outlined text-[#ffd93d]" style="font-variation-settings: 'FILL' 1;">star</span>

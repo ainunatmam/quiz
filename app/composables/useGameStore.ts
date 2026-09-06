@@ -73,10 +73,14 @@ export function useGameStore() {
     state.stars += 10;
     state.xp += 25;
     
-    // Level up logic (e.g. level up every 100 XP or just automatic level up for stage 4 completion)
-    if (stageNum === 4) {
-      state.level = 6;
+    // Level up logic
+    if (stageNum === 5) {
+      state.level = 7;
       state.worldProgress = 100;
+      state.currentStage = 5;
+    } else if (stageNum === 4) {
+      state.level = 6;
+      state.worldProgress = 80;
       state.currentStage = 5;
     } else {
       state.currentStage = Math.max(state.currentStage, stageNum + 1);
