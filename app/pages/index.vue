@@ -52,7 +52,9 @@
           <div class="stat-card p-6 flex flex-col items-center justify-center select-none">
             <span class="material-symbols-outlined text-[#005db8] text-4xl mb-2" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
             <h3 class="text-sm font-bold text-[#4d4633] uppercase tracking-wide">Current Level</h3>
-            <p class="text-3xl font-extrabold text-[#1f1b12] mt-1">Level {{ store.state.level }}</p>
+            <p :class="store.isMaxLevel.value ? 'text-[#705d00] font-black' : 'text-[#1f1b12] font-extrabold'" class="text-3xl mt-1 font-display">
+              {{ store.isMaxLevel.value ? 'Level Max' : `Level ${store.state.level}` }}
+            </p>
           </div>
 
           <!-- Stars Card -->

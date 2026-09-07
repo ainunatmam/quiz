@@ -27,8 +27,17 @@
       <!-- Level Badge -->
       <div class="hidden sm:flex bg-[#8ff199]/20 text-[#00702a] rounded-full px-4 py-2 font-bold items-center gap-2 border-2 border-[#8ff199] shadow-sm select-none">
         <span class="material-symbols-outlined text-[#006e29]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
-        <span>Lvl {{ store.state.level }}</span>
+        <span>{{ store.isMaxLevel.value ? 'Lvl Max' : `Lvl ${store.state.level}` }}</span>
       </div>
+
+      <!-- Admin / Input Soal Page Link -->
+      <NuxtLink 
+        to="/admin"
+        title="Input & Kelola Soal"
+        class="w-10 h-10 flex items-center justify-center rounded-full bg-[#e8f2ff] border-2 border-[#005db8] text-[#005db8] hover:bg-[#d0e4ff] hover:scale-105 active:scale-95 transition-transform"
+      >
+        <span class="material-symbols-outlined text-xl">edit_note</span>
+      </NuxtLink>
 
       <!-- Reset State Button (Secret cheat/helper for demo) -->
       <button 

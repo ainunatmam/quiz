@@ -28,7 +28,7 @@ quiz/
 │   │   └── useGameStore.ts       # Store state global (bintang, level, xp, status stage, sync localStorage)
 │   ├── layouts/
 │   │   └── default.vue           # Layout default wrapper (<slot />)
-│   └── pages/
+│       ├── admin.vue             # Halaman pengelola & input soal kuis (Stage 1-5, 4 petak jawaban, penentu jawaban benar)
 │       ├── index.vue             # Halaman utama (Hero, Mascot, CTA, dan kartu statistik Bento Grid)
 │       ├── journey.vue           # Peta interaktif (5 stage nodes, garis jalur, dan penanda maskot)
 │       ├── quiz.vue              # Layar pengerjaan kuis interaktif (umpan balik suara Web Audio API & bubble speech)
@@ -47,20 +47,23 @@ quiz/
 ### 3.1 Manajemen State & Persistensi (`app/composables/useGameStore.ts`)
 - **Pola State Reaktif**: Menggunakan satu instance objek `reactive()` tunggal berdasarkan state awal `DEFAULT_STATE`.
 - **Model Data (`GameState`)**:
-  - `stars` (number): Jumlah total bintang yang dikumpulkan pemain (default: `120`).
-  - `level` (number): Level pemain saat ini (default: `5`).
-  - `xp` (number): Poin pengalaman / XP (default: `1200`).
-  - `worldProgress` (number): Persentase kemajuan dunia (default: `75`).
-  - `completedStages` (`Record<number, StageProgress>`): Objek pendaftaran status stage 1..5 (`{ stars: number, completed: boolean }`).
-  - `currentStage` (number): Pointer stage aktif saat ini (default: `4`).
+  - `stars` (number): Jumlah total bintang yang dikumpulkan pemain (default: `0`).
+  - `level` (number): Level pemain saat ini (default: `1`).
+  - `xp` (number): Poin pengalaman / XP (default: `0`).
+  - `worldProgress` (number): Persentase kemajuan dunia (default: `0`).
+  - `completedStages` (`Record<number, StageProgress>`): Objek pendaftaran status stage 1..N (`{ stars: number, completed: boolean }`).
+  - `currentStage` (number): Pointer stage aktif saat ini (default: `1`).
+  - `questionsByStage` (`Record<number, Question[]>`): Dataset soal per Stage (dinamis 1..N), dapat ditambah/diubah dari `/admin`.
 - **Sinkronisasi Persistensi (`localStorage`)**:
   - Key penyimpanan: `'kids_quest_adventure_state'`.
   - Fungsi `loadState()` membaca data JSON tersimpan saat hidrasi klien.
   - Fungsi `saveState()` dipicu secara otomatis oleh watcher reaktif `watch(state, ..., { deep: true })`.
   - Dilengkapi guard `typeof window !== 'undefined'` untuk keamanan Server-Side Rendering (SSR).
 - **Mutator State**:
-  - `completeStage(stageNum: number, starsEarned: number)`: Memperbarui status kelulusan stage, menambahkan 10 bintang dan 25 XP. Jika stage 4 diselesaikan, otomatis menaikkan level ke Level 6 dan world progress ke 100%.
-  - `resetGame()`: Mengembalikan seluruh state ke `DEFAULT_STATE` dan memperbarui `localStorage`.
+  - `completeStage(stageNum: number, starsEarned: number)`: Memperbarui status kelulusan stage, menambahkan 10 bintang dan 25 XP, serta mengalkulasi persentase `worldProgress` secara dinamis berbasis total stage.
+  - `addStage()`: Menambahkan stage baru `N+1` secara dinamis.
+  - `deleteStage(stageNum: number)`: Menghapus stage pilihan dari admin.
+  - `resetGame()`: Mengembalikan progress pemain (bintang, level, xp, world progress, current stage) ke posisi awal tanpa menghapus soal atau stage kustom yang telah dibuat di halaman `/admin`.
 
 ### 3.2 Alur Navigasi & Routing
 - **`index.vue` (`/`)**: Beranda utama. Tombol CTA mengarahkan ke `/journey`.

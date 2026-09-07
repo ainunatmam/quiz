@@ -20,196 +20,96 @@
     <QuizHeader showBack backTo="/" />
 
     <!-- Main Map Container -->
-    <main class="relative w-full max-w-3xl mx-auto h-[800px] mt-8 p-6 flex flex-col items-center z-10 select-none">
-      <!-- Path Lines (dynamic colored paths based on unlock status) -->
-      <!-- Line 4 to 5 -->
-      <div 
-        class="path-line h-[120px] top-[140px] left-1/2 -ml-2 -rotate-12 transform origin-bottom"
-        :class="{ 'locked': !isUnlocked(5) }"
-      ></div>
+    <main
+      class="relative w-full max-w-3xl mx-auto mt-8 p-6 flex flex-col items-center z-10 select-none transition-all duration-300"
+      :style="{ height: containerHeight }"
+    >
+      <!-- Dynamic SVG Path Lines connecting Stage i to Stage i+1 -->
+      <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
+        <g v-for="s in stagesList.slice(0, stagesList.length - 1)" :key="`line-${s}`">
+          <!-- Outer road shadow -->
+          <line
+            :x1="getLineCoords(s).x1"
+            :y1="getLineCoords(s).y1"
+            :x2="getLineCoords(s).x2"
+            :y2="getLineCoords(s).y2"
+            stroke="rgba(0,0,0,0.12)"
+            stroke-width="16"
+            stroke-linecap="round"
+          />
+          <!-- Road main track -->
+          <line
+            :x1="getLineCoords(s).x1"
+            :y1="getLineCoords(s).y1"
+            :x2="getLineCoords(s).x2"
+            :y2="getLineCoords(s).y2"
+            :stroke="isUnlocked(s + 1) ? '#ffffff' : '#cbd5e1'"
+            stroke-width="12"
+            stroke-linecap="round"
+          />
+          <!-- Dashed inner adventure trail -->
+          <line
+            :x1="getLineCoords(s).x1"
+            :y1="getLineCoords(s).y1"
+            :x2="getLineCoords(s).x2"
+            :y2="getLineCoords(s).y2"
+            :stroke="isUnlocked(s + 1) ? '#ffd93d' : '#94a3b8'"
+            stroke-width="6"
+            stroke-dasharray="10 8"
+            stroke-linecap="round"
+          />
+        </g>
+      </svg>
 
-      <!-- Line 3 to 4 -->
-      <div 
-        class="path-line h-[130px] top-[260px] left-[60%] -ml-2 rotate-45 transform origin-bottom"
-        :class="{ 'locked': !isUnlocked(4) }"
-      ></div>
-
-      <!-- Line 2 to 3 -->
-      <div 
-        class="path-line h-[150px] top-[390px] left-[40%] -ml-2 -rotate-30 transform origin-bottom"
-        :class="{ 'locked': !isUnlocked(3) }"
-      ></div>
-
-      <!-- Line 1 to 2 -->
-      <div 
-        class="path-line h-[140px] top-[540px] left-[70%] -ml-2 rotate-12 transform origin-bottom"
-        :class="{ 'locked': !isUnlocked(2) }"
-      ></div>
-
-      <!-- Level Nodes (1 to 5) -->
-      <!-- Node 5 (Grand Final Master Stage) -->
-      <div class="absolute top-[80px] left-[35%]">
+      <!-- Level Nodes (Dynamic Stage 1 to N) -->
+      <div
+        v-for="s in stagesList"
+        :key="`node-${s}`"
+        class="absolute -translate-x-1/2 transition-all duration-300 z-10"
+        :style="{ top: `${getStageTop(s)}px`, left: `${getStageLeft(s)}%` }"
+      >
         <button 
-          @click="clickNode(5)"
-          :class="getNodeClass(5)"
-          class="w-24 h-24 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200 border-4 shadow-xl"
+          @click="clickNode(s)"
+          :class="[getNodeClass(s), s === maxStage ? 'w-24 h-24 border-4 shadow-xl' : 'w-20 h-20']"
+          class="rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
         >
-          <!-- Special Master Stage Crown Topper -->
-          <div class="absolute -top-6 text-[#ffd93d] animate-bounce">
+          <!-- Special Master Stage Crown Topper on highest Stage N -->
+          <div v-if="s === maxStage" class="absolute -top-6 text-[#ffd93d] animate-bounce">
             <span class="material-symbols-outlined text-3xl font-bold drop-shadow-md" style="font-variation-settings: 'FILL' 1;">crown</span>
           </div>
 
-          <span class="material-symbols-outlined text-3xl font-bold" style="font-variation-settings: 'FILL' 1;">{{ getNodeIcon(5) }}</span>
-          <span class="text-xs font-extrabold mt-0.5 font-display">Stage 5</span>
+          <!-- Stage Custom Icon -->
+          <span :class="s === maxStage ? 'text-3xl' : 'text-2xl'" class="material-symbols-outlined font-bold" style="font-variation-settings: 'FILL' 1;">
+            {{ store.getStageIcon(s) }}
+          </span>
+          <span class="text-xs font-extrabold mt-0.5 font-display">Stage {{ s }}</span>
+
+          <!-- Status Mini Badge (Lock / Check / Play) -->
+          <div 
+            class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 shadow-sm z-20"
+            :class="getStatusBadgeClass(s)"
+          >
+            <span class="material-symbols-outlined text-sm font-bold">
+              {{ getStatusBadgeIcon(s) }}
+            </span>
+          </div>
 
           <!-- Stars earned layout -->
           <div 
-            v-if="store.state.completedStages[5]?.completed"
+            v-if="store.state.completedStages[s]?.completed"
             class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90 z-20"
           >
             <span 
               v-for="star in 3" 
               :key="star"
               class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
-              :style="{ fontVariationSettings: star <= (store.state.completedStages[5]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
+              :style="{ fontVariationSettings: star <= (store.state.completedStages[s]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
             >star</span>
           </div>
 
-          <!-- Mascot pointing/cheering at Current stage 5 -->
+          <!-- Mascot pointing/cheering at Current active stage -->
           <div 
-            v-if="store.state.currentStage === 5" 
-            class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"
-          >
-            <img alt="Mascot at current stage" class="w-full h-full object-contain filter drop-shadow-lg" src="/mascot.png" />
-          </div>
-        </button>
-      </div>
-
-      <!-- Node 4 -->
-      <div class="absolute top-[220px] left-[55%]">
-        <button 
-          @click="clickNode(4)"
-          :class="getNodeClass(4)"
-          class="w-20 h-20 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
-        >
-          <span class="material-symbols-outlined text-2xl font-bold" style="font-variation-settings: 'FILL' 1;">{{ getNodeIcon(4) }}</span>
-          <span class="text-xs font-bold mt-1 font-display">Stage 4</span>
-
-          <!-- Stars earned layout -->
-          <div 
-            v-if="store.state.completedStages[4]?.completed"
-            class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90"
-          >
-            <span 
-              v-for="star in 3" 
-              :key="star"
-              class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
-              :style="{ fontVariationSettings: star <= (store.state.completedStages[4]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
-            >star</span>
-          </div>
-
-          <!-- Mascot pointing/cheering at Current stage 4 -->
-          <div 
-            v-if="store.state.currentStage === 4" 
-            class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"
-          >
-            <img alt="Mascot at current stage" class="w-full h-full object-contain filter drop-shadow-lg" src="/mascot.png" />
-          </div>
-        </button>
-      </div>
-
-      <!-- Node 3 -->
-      <div class="absolute top-[370px] left-[25%]">
-        <button 
-          @click="clickNode(3)"
-          :class="getNodeClass(3)"
-          class="w-20 h-20 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
-        >
-          <span class="material-symbols-outlined text-2xl font-bold" style="font-variation-settings: 'FILL' 1;">{{ getNodeIcon(3) }}</span>
-          <span class="text-xs font-bold mt-1 font-display">Stage 3</span>
-
-          <!-- Stars earned layout -->
-          <div 
-            v-if="store.state.completedStages[3]?.completed"
-            class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90"
-          >
-            <span 
-              v-for="star in 3" 
-              :key="star"
-              class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
-              :style="{ fontVariationSettings: star <= (store.state.completedStages[3]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
-            >star</span>
-          </div>
-
-          <!-- Mascot at current stage 3 if reset/active -->
-          <div 
-            v-if="store.state.currentStage === 3" 
-            class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"
-          >
-            <img alt="Mascot at current stage" class="w-full h-full object-contain filter drop-shadow-lg" src="/mascot.png" />
-          </div>
-        </button>
-      </div>
-
-      <!-- Node 2 -->
-      <div class="absolute top-[520px] left-[65%]">
-        <button 
-          @click="clickNode(2)"
-          :class="getNodeClass(2)"
-          class="w-20 h-20 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
-        >
-          <span class="material-symbols-outlined text-2xl font-bold" style="font-variation-settings: 'FILL' 1;">{{ getNodeIcon(2) }}</span>
-          <span class="text-xs font-bold mt-1 font-display">Stage 2</span>
-
-          <!-- Stars earned layout -->
-          <div 
-            v-if="store.state.completedStages[2]?.completed"
-            class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90"
-          >
-            <span 
-              v-for="star in 3" 
-              :key="star"
-              class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
-              :style="{ fontVariationSettings: star <= (store.state.completedStages[2]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
-            >star</span>
-          </div>
-
-          <!-- Mascot at current stage 2 if reset/active -->
-          <div 
-            v-if="store.state.currentStage === 2" 
-            class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"
-          >
-            <img alt="Mascot at current stage" class="w-full h-full object-contain filter drop-shadow-lg" src="/mascot.png" />
-          </div>
-        </button>
-      </div>
-
-      <!-- Node 1 -->
-      <div class="absolute top-[660px] left-[40%]">
-        <button 
-          @click="clickNode(1)"
-          :class="getNodeClass(1)"
-          class="w-20 h-20 rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
-        >
-          <span class="material-symbols-outlined text-2xl font-bold" style="font-variation-settings: 'FILL' 1;">{{ getNodeIcon(1) }}</span>
-          <span class="text-xs font-bold mt-1 font-display">Stage 1</span>
-
-          <!-- Stars earned layout -->
-          <div 
-            v-if="store.state.completedStages[1]?.completed"
-            class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90"
-          >
-            <span 
-              v-for="star in 3" 
-              :key="star"
-              class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
-              :style="{ fontVariationSettings: star <= (store.state.completedStages[1]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
-            >star</span>
-          </div>
-
-          <!-- Mascot at current stage 1 if reset/active -->
-          <div 
-            v-if="store.state.currentStage === 1" 
+            v-if="store.state.currentStage === s" 
             class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"
           >
             <img alt="Mascot at current stage" class="w-full h-full object-contain filter drop-shadow-lg" src="/mascot.png" />
@@ -239,6 +139,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useGameStore } from '~/composables/useGameStore';
 import { useRouter } from 'vue-router';
 
@@ -251,6 +152,39 @@ useHead({
     { name: 'description', content: 'Explore the map, unlock stages and test your knowledge!' }
   ]
 });
+
+const stagesList = computed<number[]>(() => {
+  const keys = Object.keys(store.state.questionsByStage).map(Number);
+  return keys.sort((a, b) => a - b);
+});
+
+const maxStage = computed<number>(() => {
+  return stagesList.value.length > 0 ? Math.max(...stagesList.value) : 1;
+});
+
+const getStageLeft = (stageNum: number) => {
+  const pattern = [40, 65, 25, 55, 35];
+  return pattern[(stageNum - 1) % pattern.length];
+};
+
+const getStageTop = (stageNum: number) => {
+  const reverseIndex = maxStage.value - stageNum;
+  return 80 + reverseIndex * 145;
+};
+
+const containerHeight = computed(() => {
+  return `${Math.max(800, 80 + maxStage.value * 145 + 100)}px`;
+});
+
+const getLineCoords = (stageNum: number) => {
+  const y1 = getStageTop(stageNum) + (stageNum === maxStage.value ? 48 : 40);
+  const x1 = `${getStageLeft(stageNum)}%`;
+
+  const y2 = getStageTop(stageNum + 1) + (stageNum + 1 === maxStage.value ? 48 : 40);
+  const x2 = `${getStageLeft(stageNum + 1)}%`;
+
+  return { x1, y1, x2, y2 };
+};
 
 const isUnlocked = (stageNum: number) => {
   if (stageNum === 1) return true;
@@ -270,13 +204,22 @@ const getNodeClass = (stageNum: number) => {
   }
 };
 
-const getNodeIcon = (stageNum: number) => {
+const getStatusBadgeIcon = (stageNum: number) => {
   const current = store.state.currentStage === stageNum;
   const completed = store.state.completedStages[stageNum]?.completed;
-  
+
   if (current) return 'play_arrow';
-  if (completed) return 'check_circle';
+  if (completed) return 'check';
   return 'lock';
+};
+
+const getStatusBadgeClass = (stageNum: number) => {
+  const current = store.state.currentStage === stageNum;
+  const completed = store.state.completedStages[stageNum]?.completed;
+
+  if (current) return 'bg-[#ffd93d] text-[#725e00] border-[#705d00]';
+  if (completed) return 'bg-[#8ff199] text-[#006e29] border-[#006e29]';
+  return 'bg-[#d0c6ad] text-[#7e7761] border-[#7e7761]';
 };
 
 const clickNode = (stageNum: number) => {

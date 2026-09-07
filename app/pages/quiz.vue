@@ -119,9 +119,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useGameStore } from '~/composables/useGameStore';
+import { useGameStore, type Question, type Option } from '~/composables/useGameStore';
 
 const route = useRoute();
 const router = useRouter();
@@ -129,7 +129,7 @@ const store = useGameStore();
 
 const stageId = computed(() => {
   const s = parseInt(route.query.stage as string);
-  return isNaN(s) ? 4 : s;
+  return isNaN(s) ? 1 : s;
 });
 
 useHead({
@@ -139,168 +139,12 @@ useHead({
   ]
 });
 
-// Setup trivia questions by stage
-interface Option {
-  text: string;
-  icon: string;
-  isCorrect: boolean;
-}
-
-interface Question {
-  prompt: string;
-  options: Option[];
-}
-
-const questionsByStage: Record<number, Question[]> = {
-  1: [
-    {
-      prompt: '[Stage 1: Animals] Which of these animals swims in the deep ocean?',
-      options: [
-        { text: 'Dolphin', icon: 'waves', isCorrect: true },
-        { text: 'Lion', icon: 'pets', isCorrect: false },
-        { text: 'Elephant', icon: 'eco', isCorrect: false },
-        { text: 'Eagle', icon: 'flight', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '[Stage 1: Animals] Which bird flies high in the sky?',
-      options: [
-        { text: 'Eagle', icon: 'flight', isCorrect: true },
-        { text: 'Fish', icon: 'water', isCorrect: false },
-        { text: 'Frog', icon: 'nature', isCorrect: false },
-        { text: 'Cat', icon: 'pets', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '[Stage 1: Animals] Which animal is known as the King of the Jungle?',
-      options: [
-        { text: 'Lion', icon: 'pets', isCorrect: true },
-        { text: 'Rabbit', icon: 'eco', isCorrect: false },
-        { text: 'Dolphin', icon: 'waves', isCorrect: false },
-        { text: 'Turtle', icon: 'water', isCorrect: false }
-      ]
-    }
-  ],
-  2: [
-    {
-      prompt: '[Stage 2: Shapes] Which shape has exactly 3 corners?',
-      options: [
-        { text: 'Square', icon: 'crop_square', isCorrect: false },
-        { text: 'Circle', icon: 'fiber_manual_record', isCorrect: false },
-        { text: 'Triangle', icon: 'change_history', isCorrect: true },
-        { text: 'Star', icon: 'grade', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '[Stage 2: Shapes] What shape is a round shiny coin?',
-      options: [
-        { text: 'Circle', icon: 'fiber_manual_record', isCorrect: true },
-        { text: 'Triangle', icon: 'change_history', isCorrect: false },
-        { text: 'Square', icon: 'crop_square', isCorrect: false },
-        { text: 'Diamond', icon: 'diamond', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '[Stage 2: Shapes] Which shape shines high up in the night sky?',
-      options: [
-        { text: 'Star', icon: 'grade', isCorrect: true },
-        { text: 'Rectangle', icon: 'crop_square', isCorrect: false },
-        { text: 'Circle', icon: 'fiber_manual_record', isCorrect: false },
-        { text: 'Triangle', icon: 'change_history', isCorrect: false }
-      ]
-    }
-  ],
-  3: [
-    {
-      prompt: '[Stage 3: Fruits] Which of these is a red yummy fruit?',
-      options: [
-        { text: 'Broccoli', icon: 'nutrition', isCorrect: false },
-        { text: 'Apple', icon: 'apple', isCorrect: true },
-        { text: 'Potato', icon: 'grass', isCorrect: false },
-        { text: 'Carrot', icon: 'filter_hdr', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '[Stage 3: Fruits] Which yellow fruit is a favorite snack for monkeys?',
-      options: [
-        { text: 'Banana', icon: 'nutrition', isCorrect: true },
-        { text: 'Onion', icon: 'eco', isCorrect: false },
-        { text: 'Tomato', icon: 'circle', isCorrect: false },
-        { text: 'Mushroom', icon: 'forest', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '[Stage 3: Fruits] Which sweet fruit grows in purple bunches?',
-      options: [
-        { text: 'Grapes', icon: 'grain', isCorrect: true },
-        { text: 'Corn', icon: 'grass', isCorrect: false },
-        { text: 'Cucumber', icon: 'eco', isCorrect: false },
-        { text: 'Coconut', icon: 'circle', isCorrect: false }
-      ]
-    }
-  ],
-  4: [
-    {
-      prompt: '[Stage 4: Forest] What green plants fill the forest and clean our air?',
-      options: [
-        { text: 'Trees', icon: 'park', isCorrect: true },
-        { text: 'Rocks', icon: 'landscape', isCorrect: false },
-        { text: 'Clouds', icon: 'cloud', isCorrect: false },
-        { text: 'Sand', icon: 'grain', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '[Stage 4: Forest] What falls from clouds to give forest plants water?',
-      options: [
-        { text: 'Raindrops', icon: 'water_drop', isCorrect: true },
-        { text: 'Sunbeams', icon: 'light_mode', isCorrect: false },
-        { text: 'Wind', icon: 'air', isCorrect: false },
-        { text: 'Leaves', icon: 'eco', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '[Stage 4: Forest] Which warm star shines bright over the forest canopy?',
-      options: [
-        { text: 'The Sun', icon: 'light_mode', isCorrect: true },
-        { text: 'The Moon', icon: 'dark_mode', isCorrect: false },
-        { text: 'A Comet', icon: 'auto_awesome', isCorrect: false },
-        { text: 'Lantern', icon: 'light', isCorrect: false }
-      ]
-    }
-  ],
-  5: [
-    {
-      prompt: '🌟 [Stage 5 Master Review]: Which ocean creature from Stage 1 swims in deep water?',
-      options: [
-        { text: 'Dolphin', icon: 'waves', isCorrect: true },
-        { text: 'Lion', icon: 'pets', isCorrect: false },
-        { text: 'Eagle', icon: 'flight', isCorrect: false },
-        { text: 'Elephant', icon: 'eco', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '🌟 [Stage 5 Master Review]: Which red fruit from Stage 3 matches the round shape from Stage 2?',
-      options: [
-        { text: 'Apple', icon: 'apple', isCorrect: true },
-        { text: 'Broccoli', icon: 'nutrition', isCorrect: false },
-        { text: 'Triangle Chip', icon: 'change_history', isCorrect: false },
-        { text: 'Carrot', icon: 'filter_hdr', isCorrect: false }
-      ]
-    },
-    {
-      prompt: '🌟 [Stage 5 Master Review]: What 3-corner shape from Stage 2 does a pine tree top in Stage 4 look like?',
-      options: [
-        { text: 'Triangle', icon: 'change_history', isCorrect: true },
-        { text: 'Square', icon: 'crop_square', isCorrect: false },
-        { text: 'Circle', icon: 'fiber_manual_record', isCorrect: false },
-        { text: 'Star', icon: 'grade', isCorrect: false }
-      ]
-    }
-  ]
-};
-
 const questions = computed(() => {
-  return questionsByStage[stageId.value] || questionsByStage[5];
+  const stageQuestions = store.state.questionsByStage?.[stageId.value];
+  if (stageQuestions && stageQuestions.length > 0) {
+    return stageQuestions;
+  }
+  return store.state.questionsByStage?.[1] || [];
 });
 
 const currentQuestionIdx = ref(0);
