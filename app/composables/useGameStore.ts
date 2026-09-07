@@ -371,14 +371,90 @@ export function useGameStore() {
     saveState();
   };
 
+  const exportQuizData = (stageNum?: number) => {
+    let questionsToExport: Record<number, Question[]> = {};
+    let iconsToExport: Record<number, string> = {};
+
+    if (stageNum && state.questionsByStage[stageNum]) {
+      questionsToExport[stageNum] = JSON.parse(JSON.stringify(state.questionsByStage[stageNum]));
+      if (state.stageIcons && state.stageIcons[stageNum]) {
+        iconsToExport[stageNum] = state.stageIcons[stageNum];
+      }
+    } else {
+      questionsToExport = JSON.parse(JSON.stringify(state.questionsByStage));
+      iconsToExport = JSON.parse(JSON.stringify(state.stageIcons || DEFAULT_STAGE_ICONS));
+    }
+
+    return {
+      appName: 'QuizQuest Adventure',
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      questionsByStage: questionsToExport,
+      stageIcons: iconsToExport
+    };
+  };
+
+  const importQuizData = (importedData: any, overwrite: boolean = true) => {
+    if (!importedData || typeof importedData !== 'object') {
+      throw new Error('Data JSON tidak valid!');
+    }
+
+    const questionsObj = importedData.questionsByStage || importedData;
+
+    if (typeof questionsObj !== 'object' || Array.isArray(questionsObj)) {
+      throw new Error('Format pertanyaan tidak valid!');
+    }
+
+    if (overwrite) {
+      state.questionsByStage = {};
+      state.stageIcons = {};
+      state.completedStages = {};
+    }
+
+    for (const [key, questions] of Object.entries(questionsObj)) {
+      const stageNum = Number(key);
+      if (isNaN(stageNum) || !Array.isArray(questions)) continue;
+
+      if (!state.questionsByStage[stageNum] || overwrite) {
+        state.questionsByStage[stageNum] = [];
+      }
+
+      for (const q of questions as any[]) {
+        if (q && typeof q === 'object' && q.prompt && Array.isArray(q.options)) {
+          state.questionsByStage[stageNum].push({
+            prompt: String(q.prompt),
+            options: q.options.map((opt: any) => ({
+              text: String(opt.text || ''),
+              icon: String(opt.icon || 'help'),
+              isCorrect: Boolean(opt.isCorrect)
+            }))
+          });
+        }
+      }
+
+      if (!state.completedStages[stageNum]) {
+        state.completedStages[stageNum] = { stars: 0, completed: false };
+      }
+    }
+
+    if (importedData.stageIcons && typeof importedData.stageIcons === 'object') {
+      if (!state.stageIcons) state.stageIcons = {};
+      for (const [key, icon] of Object.entries(importedData.stageIcons)) {
+        state.stageIcons[Number(key)] = String(icon);
+      }
+    }
+
+    saveState();
+  };
+
   const isMaxLevel = computed(() => {
     const stageKeys = Object.keys(state.questionsByStage).map(Number);
     const maxStageNum = stageKeys.length > 0 ? Math.max(...stageKeys) : 5;
     const completedCount = Object.values(state.completedStages).filter(s => s.completed).length;
 
-    return state.level > maxStageNum || 
-           (stageKeys.length > 0 && completedCount >= stageKeys.length) || 
-           state.worldProgress >= 100;
+    return state.level > maxStageNum ||
+      (stageKeys.length > 0 && completedCount >= stageKeys.length) ||
+      state.worldProgress >= 100;
   });
 
   return {
@@ -393,6 +469,8 @@ export function useGameStore() {
     addQuestion,
     updateQuestion,
     deleteQuestion,
-    resetQuestionsToDefault
+    resetQuestionsToDefault,
+    exportQuizData,
+    importQuizData
   };
 }

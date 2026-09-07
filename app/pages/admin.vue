@@ -25,11 +25,25 @@
 
         <div class="flex flex-wrap items-center gap-3">
           <button
-            @click="showStageIconModal = true"
+            @click="openExportModal"
             class="bubbly-btn bg-[#e8f2ff] text-[#005db8] border-[#005db8] shadow-[0px_6px_0px_0px_#005db8] px-4 py-3 rounded-2xl font-extrabold flex items-center gap-2 hover:scale-105 active:translate-y-1 active:shadow-none transition-all font-display text-sm md:text-base select-none"
           >
+            <span class="material-symbols-outlined text-2xl font-bold">download</span>
+            Export Data
+          </button>
+          <button
+            @click="openImportModal"
+            class="bubbly-btn bg-[#fbf3e2] text-[#705d00] border-[#705d00] shadow-[0px_6px_0px_0px_#705d00] px-4 py-3 rounded-2xl font-extrabold flex items-center gap-2 hover:scale-105 active:translate-y-1 active:shadow-none transition-all font-display text-sm md:text-base select-none"
+          >
+            <span class="material-symbols-outlined text-2xl font-bold">upload</span>
+            Import Data
+          </button>
+          <button
+            @click="showStageIconModal = true"
+            class="bubbly-btn bg-[#fff8ef] text-[#4d4633] border-[#d0c6ad] shadow-[0px_6px_0px_0px_#d0c6ad] px-4 py-3 rounded-2xl font-extrabold flex items-center gap-2 hover:scale-105 active:translate-y-1 active:shadow-none transition-all font-display text-sm md:text-base select-none"
+          >
             <span class="material-symbols-outlined text-2xl font-bold">image</span>
-            Ganti Logo Stage {{ selectedStage }}
+            Logo Stage {{ selectedStage }}
           </button>
           <button
             @click="handleAddNewStage"
@@ -349,6 +363,175 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Export Data -->
+    <Teleport to="body">
+      <div
+        v-if="showExportModal"
+        class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      >
+        <div class="bg-white rounded-3xl border-4 border-[#005db8] shadow-2xl max-w-2xl w-full p-6 md:p-8 flex flex-col gap-6 animate-pop-in relative my-auto">
+          <div class="flex items-center justify-between border-b pb-4 border-[#f5eddd]">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-[#e8f2ff] border-2 border-[#005db8] flex items-center justify-center text-[#005db8]">
+                <span class="material-symbols-outlined text-3xl font-bold">download</span>
+              </div>
+              <div>
+                <h2 class="text-xl md:text-2xl font-extrabold text-[#005db8] font-display">
+                  Export Data Soal & Stage
+                </h2>
+                <p class="text-xs text-[#7e7761] font-semibold">Unduh atau salin data soal dalam format JSON untuk dibagikan.</p>
+              </div>
+            </div>
+            <button @click="showExportModal = false" class="text-[#7e7761] hover:text-black p-2 rounded-full hover:bg-[#f5eddd] transition-colors cursor-pointer">
+              <span class="material-symbols-outlined text-2xl font-bold">close</span>
+            </button>
+          </div>
+
+          <!-- Scope Selector (All vs Current Stage) -->
+          <div class="flex items-center gap-3 bg-[#f5eddd] p-2 rounded-2xl border-2 border-[#d0c6ad]">
+            <button
+              @click="exportScope = 'all'; updateExportJson()"
+              :class="[exportScope === 'all' ? 'bg-[#005db8] text-white shadow-md' : 'text-[#4d4633] hover:bg-white/50']"
+              class="flex-1 py-2.5 rounded-xl font-extrabold text-xs md:text-sm font-display transition-all cursor-pointer select-none"
+            >
+              📦 Semua Stage
+            </button>
+            <button
+              @click="exportScope = 'single'; updateExportJson()"
+              :class="[exportScope === 'single' ? 'bg-[#005db8] text-white shadow-md' : 'text-[#4d4633] hover:bg-white/50']"
+              class="flex-1 py-2.5 rounded-xl font-extrabold text-xs md:text-sm font-display transition-all cursor-pointer select-none"
+            >
+              🎯 Hanya Stage {{ selectedStage }}
+            </button>
+          </div>
+
+          <!-- JSON Code View -->
+          <div class="relative">
+            <textarea
+              v-model="exportJsonString"
+              readonly
+              rows="10"
+              class="w-full p-4 rounded-2xl border-2 border-[#d0c6ad] bg-[#2d334a] text-[#8ff199] font-mono text-xs focus:outline-none resize-none shadow-inner"
+            ></textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <button
+              @click="handleCopyExportJson"
+              class="px-5 py-3 rounded-xl font-extrabold bg-[#e8f2ff] text-[#005db8] border-2 border-[#005db8] hover:bg-[#d0e4ff] active:scale-95 transition-all font-display text-sm flex items-center gap-2 select-none cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-lg">{{ copySuccess ? 'check_circle' : 'content_copy' }}</span>
+              {{ copySuccess ? 'Berhasil Disalin!' : 'Salin Teks JSON' }}
+            </button>
+
+            <div class="flex items-center gap-3">
+              <button
+                @click="showExportModal = false"
+                class="px-5 py-3 rounded-xl font-bold border-2 border-[#d0c6ad] text-[#7e7761] hover:bg-[#f5eddd] transition-all font-display text-sm cursor-pointer"
+              >
+                Tutup
+              </button>
+              <button
+                @click="handleDownloadExportJson"
+                class="px-6 py-3 rounded-xl font-black bg-[#ffd93d] text-[#725e00] border-2 border-[#705d00] shadow-[0px_4px_0px_0px_#705d00] hover:scale-105 active:translate-y-1 active:shadow-none transition-all font-display text-sm flex items-center gap-2 select-none cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-xl">download</span>
+                Unduh File JSON
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Modal Import Data -->
+    <Teleport to="body">
+      <div
+        v-if="showImportModal"
+        class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      >
+        <div class="bg-white rounded-3xl border-4 border-[#006e29] shadow-2xl max-w-2xl w-full p-6 md:p-8 flex flex-col gap-6 animate-pop-in relative my-auto">
+          <div class="flex items-center justify-between border-b pb-4 border-[#f5eddd]">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-[#8ff199]/30 border-2 border-[#006e29] flex items-center justify-center text-[#006e29]">
+                <span class="material-symbols-outlined text-3xl font-bold">upload</span>
+              </div>
+              <div>
+                <h2 class="text-xl md:text-2xl font-extrabold text-[#006e29] font-display">
+                  Import Data Soal & Stage
+                </h2>
+                <p class="text-xs text-[#7e7761] font-semibold">Unggah file JSON atau tempel teks JSON untuk memasukkan data soal baru.</p>
+              </div>
+            </div>
+            <button @click="showImportModal = false" class="text-[#7e7761] hover:text-black p-2 rounded-full hover:bg-[#f5eddd] transition-colors cursor-pointer">
+              <span class="material-symbols-outlined text-2xl font-bold">close</span>
+            </button>
+          </div>
+
+          <!-- File Upload Area -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-extrabold text-[#4d4633] font-display flex items-center gap-1">
+              <span class="material-symbols-outlined text-lg text-[#006e29]">file_upload</span>
+              Pilih / Unggah File JSON:
+            </label>
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept=".json"
+              @change="handleFileUpload"
+              class="w-full px-4 py-3 rounded-2xl border-2 border-[#d0c6ad] bg-[#fff8ef] text-sm font-bold text-[#4d4633] file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#006e29] file:text-white hover:file:bg-[#00521e] cursor-pointer"
+            />
+          </div>
+
+          <!-- JSON Textarea Input -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-extrabold text-[#4d4633] font-display flex items-center gap-1">
+              <span class="material-symbols-outlined text-lg text-[#705d00]">code</span>
+              Atau Tempel Teks JSON Di Sini:
+            </label>
+            <textarea
+              v-model="importJsonText"
+              rows="6"
+              placeholder='Tempel data JSON di sini (contoh: {"questionsByStage": {...}})'
+              class="w-full p-4 rounded-2xl border-2 border-[#d0c6ad] bg-[#fff8ef] focus:bg-white focus:border-[#006e29] font-mono text-xs outline-none resize-none text-[#1f1b12]"
+            ></textarea>
+          </div>
+
+          <!-- Import Mode Toggle (Merge vs Overwrite) -->
+          <div class="flex items-center gap-3 bg-[#f5eddd] p-3.5 rounded-2xl border-2 border-[#d0c6ad]">
+            <input
+              id="importOverwriteCheckbox"
+              type="checkbox"
+              v-model="importOverwrite"
+              class="w-5 h-5 rounded text-[#006e29] focus:ring-[#006e29] cursor-pointer"
+            />
+            <label for="importOverwriteCheckbox" class="text-xs md:text-sm font-extrabold text-[#4d4633] font-display cursor-pointer select-none">
+              Gantikan / Timpa (Overwrite) seluruh stage saat ini
+              <span class="block text-[11px] font-semibold text-[#7e7761]">Jika dicentang, soal lama akan dihapus dan diganti penuh dengan data dari JSON baru.</span>
+            </label>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button
+              @click="showImportModal = false"
+              class="px-5 py-3 rounded-xl font-bold border-2 border-[#d0c6ad] text-[#7e7761] hover:bg-[#f5eddd] transition-all font-display text-sm cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              @click="executeImportData"
+              class="px-6 py-3 rounded-xl font-black bg-[#8ff199] text-[#006e29] border-2 border-[#006e29] shadow-[0px_4px_0px_0px_#006e29] hover:scale-105 active:translate-y-1 active:shadow-none transition-all font-display text-sm flex items-center gap-2 select-none cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-xl">publish</span>
+              Import Data Sekarang
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -370,6 +553,117 @@ const showModal = ref(false);
 const showStageIconModal = ref(false);
 const isEditing = ref(false);
 const editingIdx = ref<number>(-1);
+
+// Export & Import modal state
+const showExportModal = ref(false);
+const showImportModal = ref(false);
+const exportScope = ref<'all' | 'single'>('all');
+const exportJsonString = ref('');
+const copySuccess = ref(false);
+
+const importJsonText = ref('');
+const importOverwrite = ref(true);
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const openExportModal = () => {
+  exportScope.value = 'all';
+  updateExportJson();
+  showExportModal.value = true;
+};
+
+const updateExportJson = () => {
+  const data = store.exportQuizData(exportScope.value === 'single' ? selectedStage.value : undefined);
+  exportJsonString.value = JSON.stringify(data, null, 2);
+  copySuccess.value = false;
+};
+
+const handleCopyExportJson = async () => {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(exportJsonString.value);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = exportJsonString.value;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    copySuccess.value = true;
+    setTimeout(() => { copySuccess.value = false; }, 2500);
+  } catch (e) {
+    alert('Gagal menyalin teks JSON!');
+  }
+};
+
+const handleDownloadExportJson = () => {
+  if (!exportJsonString.value) {
+    updateExportJson();
+  }
+
+  const jsonContent = exportJsonString.value || JSON.stringify(store.exportQuizData(), null, 2);
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  const fileName = exportScope.value === 'single' 
+    ? `quizquest_stage_${selectedStage.value}_questions.json` 
+    : 'quizquest_all_stages_questions.json';
+  a.setAttribute('download', fileName);
+  a.style.display = 'none';
+  
+  document.body.appendChild(a);
+  a.click();
+  
+  setTimeout(() => {
+    if (document.body.contains(a)) {
+      document.body.removeChild(a);
+    }
+    URL.revokeObjectURL(url);
+  }, 300);
+};
+
+const openImportModal = () => {
+  importJsonText.value = '';
+  importOverwrite.value = true;
+  showImportModal.value = true;
+};
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  const file = target.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    importJsonText.value = e.target?.result as string || '';
+  };
+  reader.readAsText(file);
+};
+
+const executeImportData = () => {
+  if (!importJsonText.value.trim()) {
+    alert('Harap unggah file JSON atau tempel teks JSON terlebih dahulu!');
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(importJsonText.value.trim());
+    store.importQuizData(parsed, importOverwrite.value);
+    alert('Berhasil mengimpor data soal dan stage!');
+    showImportModal.value = false;
+    importJsonText.value = '';
+  } catch (err: any) {
+    alert(`Gagal mengimpor data JSON: ${err?.message || 'Format tidak valid'}`);
+  }
+};
+
+const confirmResetQuestions = () => {
+  if (confirm('Apakah Anda yakin ingin mengembalikan seluruh soal ke standar awal (DEFAULT)? Soal buatan Anda akan terhapus.')) {
+    store.resetQuestionsToDefault();
+    selectedStage.value = 1;
+  }
+};
 
 // Preset Material Symbols icons for quick choice
 const iconPresets = [
