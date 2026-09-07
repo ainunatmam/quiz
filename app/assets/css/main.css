@@ -22,11 +22,14 @@
   --color-on-surface-variant: #4d4633;
 }
 
-body {
+html, body {
   font-family: 'Quicksand', 'Plus Jakarta Sans', sans-serif;
   background-color: #fff8ef;
   color: #1f1b12;
   margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw;
   overflow-x: hidden;
 }
 

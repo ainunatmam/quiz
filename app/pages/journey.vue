@@ -1,122 +1,135 @@
 <template>
-  <div class="min-h-screen overflow-x-hidden pt-[100px] pb-[100px] map-bg relative text-[#1f1b12]">
-    <!-- Ambient Map Clouds -->
-    <div class="fixed top-24 left-[-150px] w-32 h-10 cloud cloud-sm float-cloud-anim" style="animation-duration: 40s;"></div>
-    <div class="fixed top-48 right-[-150px] w-24 h-8 cloud cloud-sm float-cloud-anim" style="animation-duration: 35s; animation-delay: 5s;"></div>
-    <div class="fixed top-12 left-1/3 w-40 h-12 cloud cloud-md float-cloud-anim" style="animation-duration: 50s; animation-delay: 2s;"></div>
+  <div class="min-h-screen w-full overflow-x-hidden pt-[100px] pb-[100px] map-bg relative text-[#1f1b12]">
+    <!-- Ambient Map Background (Clouds & Trees contained in viewport wrapper) -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      <!-- Ambient Map Clouds -->
+      <div class="absolute top-24 left-[-150px] w-32 h-10 cloud cloud-sm float-cloud-anim" style="animation-duration: 40s;"></div>
+      <div class="absolute top-48 right-[-150px] w-24 h-8 cloud cloud-sm float-cloud-anim" style="animation-duration: 35s; animation-delay: 5s;"></div>
+      <div class="absolute top-12 left-1/3 w-40 h-12 cloud cloud-md float-cloud-anim" style="animation-duration: 50s; animation-delay: 2s;"></div>
 
-    <!-- Tree Decorations -->
-    <div class="fixed bottom-32 left-10 tree-decoration text-[#006e29]">
-      <span class="material-symbols-outlined text-[80px]" style="font-variation-settings: 'FILL' 1;">park</span>
-    </div>
-    <div class="fixed bottom-64 right-10 tree-decoration text-[#006e29]">
-      <span class="material-symbols-outlined text-[100px]" style="font-variation-settings: 'FILL' 1;">park</span>
-    </div>
-    <div class="fixed bottom-1/2 left-20 tree-decoration text-[#7bdb85]">
-      <span class="material-symbols-outlined text-[60px]" style="font-variation-settings: 'FILL' 1;">nature</span>
+      <!-- Tree Decorations -->
+      <div class="absolute bottom-32 left-10 tree-decoration text-[#006e29]">
+        <span class="material-symbols-outlined text-[80px]" style="font-variation-settings: 'FILL' 1;">park</span>
+      </div>
+      <div class="absolute bottom-64 right-10 tree-decoration text-[#006e29]">
+        <span class="material-symbols-outlined text-[100px]" style="font-variation-settings: 'FILL' 1;">park</span>
+      </div>
+      <div class="absolute bottom-1/2 left-20 tree-decoration text-[#7bdb85]">
+        <span class="material-symbols-outlined text-[60px]" style="font-variation-settings: 'FILL' 1;">nature</span>
+      </div>
     </div>
 
     <!-- Top Navigation Header -->
     <QuizHeader showBack backTo="/" />
 
-    <!-- Main Map Container -->
-    <main
-      class="relative w-full max-w-3xl mx-auto mt-8 p-6 flex flex-col items-center z-10 select-none transition-all duration-300"
-      :style="{ height: containerHeight }"
-    >
-      <!-- Dynamic SVG Path Lines connecting Stage i to Stage i+1 -->
-      <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
-        <g v-for="s in stagesList.slice(0, stagesList.length - 1)" :key="`line-${s}`">
-          <!-- Outer road shadow -->
-          <line
-            :x1="getLineCoords(s).x1"
-            :y1="getLineCoords(s).y1"
-            :x2="getLineCoords(s).x2"
-            :y2="getLineCoords(s).y2"
-            stroke="rgba(0,0,0,0.12)"
-            stroke-width="16"
-            stroke-linecap="round"
-          />
-          <!-- Road main track -->
-          <line
-            :x1="getLineCoords(s).x1"
-            :y1="getLineCoords(s).y1"
-            :x2="getLineCoords(s).x2"
-            :y2="getLineCoords(s).y2"
-            :stroke="isUnlocked(s + 1) ? '#ffffff' : '#cbd5e1'"
-            stroke-width="12"
-            stroke-linecap="round"
-          />
-          <!-- Dashed inner adventure trail -->
-          <line
-            :x1="getLineCoords(s).x1"
-            :y1="getLineCoords(s).y1"
-            :x2="getLineCoords(s).x2"
-            :y2="getLineCoords(s).y2"
-            :stroke="isUnlocked(s + 1) ? '#ffd93d' : '#94a3b8'"
-            stroke-width="6"
-            stroke-dasharray="10 8"
-            stroke-linecap="round"
-          />
-        </g>
-      </svg>
-
-      <!-- Level Nodes (Dynamic Stage 1 to N) -->
-      <div
-        v-for="s in stagesList"
-        :key="`node-${s}`"
-        class="absolute -translate-x-1/2 transition-all duration-300 z-10"
-        :style="{ top: `${getStageTop(s)}px`, left: `${getStageLeft(s)}%` }"
+    <!-- Main Map Container (ClientOnly to ensure exact stage rendering from localStorage on reload) -->
+    <ClientOnly>
+      <main
+        class="relative w-full max-w-3xl mx-auto mt-8 p-6 flex flex-col items-center z-10 select-none transition-all duration-300"
+        :style="{ height: containerHeight }"
       >
-        <button 
-          @click="clickNode(s)"
-          :class="[getNodeClass(s), s === maxStage ? 'w-24 h-24 border-4 shadow-xl' : 'w-20 h-20']"
-          class="rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
+        <!-- Dynamic SVG Path Lines connecting Stage i to Stage i+1 -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
+          <g v-for="s in stagesList.slice(0, stagesList.length - 1)" :key="`line-${s}`">
+            <!-- Outer road shadow -->
+            <line
+              :x1="getLineCoords(s).x1"
+              :y1="getLineCoords(s).y1"
+              :x2="getLineCoords(s).x2"
+              :y2="getLineCoords(s).y2"
+              stroke="rgba(0,0,0,0.12)"
+              stroke-width="16"
+              stroke-linecap="round"
+            />
+            <!-- Road main track -->
+            <line
+              :x1="getLineCoords(s).x1"
+              :y1="getLineCoords(s).y1"
+              :x2="getLineCoords(s).x2"
+              :y2="getLineCoords(s).y2"
+              :stroke="isUnlocked(s + 1) ? '#ffffff' : '#cbd5e1'"
+              stroke-width="12"
+              stroke-linecap="round"
+            />
+            <!-- Dashed inner adventure trail -->
+            <line
+              :x1="getLineCoords(s).x1"
+              :y1="getLineCoords(s).y1"
+              :x2="getLineCoords(s).x2"
+              :y2="getLineCoords(s).y2"
+              :stroke="isUnlocked(s + 1) ? '#ffd93d' : '#94a3b8'"
+              stroke-width="6"
+              stroke-dasharray="10 8"
+              stroke-linecap="round"
+            />
+          </g>
+        </svg>
+
+        <!-- Level Nodes (Dynamic Stage 1 to N) -->
+        <div
+          v-for="s in stagesList"
+          :key="`node-${s}`"
+          class="absolute -translate-x-1/2 transition-all duration-300 z-10"
+          :style="{ top: `${getStageTop(s)}px`, left: `${getStageLeft(s)}%` }"
         >
-          <!-- Special Master Stage Crown Topper on highest Stage N -->
-          <div v-if="s === maxStage" class="absolute -top-6 text-[#ffd93d] animate-bounce">
-            <span class="material-symbols-outlined text-3xl font-bold drop-shadow-md" style="font-variation-settings: 'FILL' 1;">crown</span>
-          </div>
-
-          <!-- Stage Custom Icon -->
-          <span :class="s === maxStage ? 'text-3xl' : 'text-2xl'" class="material-symbols-outlined font-bold" style="font-variation-settings: 'FILL' 1;">
-            {{ store.getStageIcon(s) }}
-          </span>
-          <span class="text-xs font-extrabold mt-0.5 font-display">Stage {{ s }}</span>
-
-          <!-- Status Mini Badge (Lock / Check / Play) -->
-          <div 
-            class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 shadow-sm z-20"
-            :class="getStatusBadgeClass(s)"
+          <button 
+            @click="clickNode(s)"
+            :class="[getNodeClass(s), s === maxStage ? 'w-24 h-24 border-4 shadow-xl' : 'w-20 h-20']"
+            class="rounded-full flex flex-col items-center justify-center relative transition-transform duration-200"
           >
-            <span class="material-symbols-outlined text-sm font-bold">
-              {{ getStatusBadgeIcon(s) }}
+            <!-- Special Master Stage Crown Topper on highest Stage N -->
+            <div v-if="s === maxStage" class="absolute -top-6 text-[#ffd93d] animate-bounce">
+              <span class="material-symbols-outlined text-3xl font-bold drop-shadow-md" style="font-variation-settings: 'FILL' 1;">crown</span>
+            </div>
+
+            <!-- Stage Custom Icon -->
+            <span :class="s === maxStage ? 'text-3xl' : 'text-2xl'" class="material-symbols-outlined font-bold" style="font-variation-settings: 'FILL' 1;">
+              {{ store.getStageIcon(s) }}
             </span>
-          </div>
+            <span class="text-xs font-extrabold mt-0.5 font-display">Stage {{ s }}</span>
 
-          <!-- Stars earned layout -->
-          <div 
-            v-if="store.state.completedStages[s]?.completed"
-            class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90 z-20"
-          >
-            <span 
-              v-for="star in 3" 
-              :key="star"
-              class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
-              :style="{ fontVariationSettings: star <= (store.state.completedStages[s]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
-            >star</span>
-          </div>
+            <!-- Status Mini Badge (Lock / Check / Play) -->
+            <div 
+              class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 shadow-sm z-20"
+              :class="getStatusBadgeClass(s)"
+            >
+              <span class="material-symbols-outlined text-sm font-bold">
+                {{ getStatusBadgeIcon(s) }}
+              </span>
+            </div>
 
-          <!-- Mascot pointing/cheering at Current active stage -->
-          <div 
-            v-if="store.state.currentStage === s" 
-            class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"
-          >
-            <img alt="Mascot at current stage" class="w-full h-full object-contain filter drop-shadow-lg" src="/mascot.png" />
+            <!-- Stars earned layout -->
+            <div 
+              v-if="store.state.completedStages[s]?.completed"
+              class="absolute -top-3 flex gap-0.5 bg-white rounded-full px-2 py-0.5 shadow-sm border border-[#006e29] scale-90 z-20"
+            >
+              <span 
+                v-for="star in 3" 
+                :key="star"
+                class="material-symbols-outlined text-[12px] font-bold text-[#ffd93d]" 
+                :style="{ fontVariationSettings: star <= (store.state.completedStages[s]?.stars || 0) ? `'FILL' 1` : `'FILL' 0` }"
+              >star</span>
+            </div>
+
+            <!-- Mascot pointing/cheering at Current active stage -->
+            <div 
+              v-if="store.state.currentStage === s" 
+              class="absolute -top-16 -right-12 w-24 h-24 animate-mascot-bounce pointer-events-none z-30"
+            >
+              <img alt="Mascot at current stage" class="w-full h-full object-contain filter drop-shadow-lg" src="/mascot.png" />
+            </div>
+          </button>
+        </div>
+      </main>
+      <template #fallback>
+        <div class="w-full max-w-3xl mx-auto mt-8 p-6 flex flex-col items-center justify-center min-h-[800px] z-10">
+          <div class="animate-bounce flex flex-col items-center gap-3 text-[#005db8]">
+            <span class="material-symbols-outlined text-5xl">map</span>
+            <span class="font-bold text-lg font-display">Memuat Peta Petualangan...</span>
           </div>
-        </button>
-      </div>
-    </main>
+        </div>
+      </template>
+    </ClientOnly>
 
     <!-- Bottom Navigation (Mobile Only) -->
     <nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 bg-[#4c96fe] border-t-4 border-[#005db8] rounded-t-2xl shadow-[0px_-8px_0px_0px_rgba(0,46,96,0.15)]">
